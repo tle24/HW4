@@ -1,0 +1,196 @@
+---
+title: "Programming in Base R"
+format: pdf
+editor: visual
+---
+
+## Task 1: Conceptual Questions
+
+### Question 1
+
+The purpose of the `lapply` function is to apply a function to each element of a list. The equivalent purrr function is the `map` function.
+
+### Question 2
+
+```{r, eval=FALSE}
+lapply(X = my_list, 
+       FUN = function(numeric_matix) cor(numeric_matrix, method = "kendall"))
+```
+
+### Question 3
+
+The advantages of using purrr functions instead of the BaseR `apply` function because it will return the output as a list and it allows for shorthand to be written through the use of lambda or anonymous functions.
+
+### Question 4
+
+Side-effect functions are functions such as `print()` or `plot()` that does not transform the data but rather produces something different.
+
+### Question 5
+
+A variable can be named `sd` in a function and not cause any issues with the `sd` function because R can differentiate between a variable when there is `sd =` and a function with `sd()`.
+
+## Task 2: Writing R Functions
+
+### Question 1 - Write function to calculate RMSE
+
+```{r}
+getRMSE <- function(response, prediction, ...){
+  sqrt(mean((response - prediction)^2, ...))
+}
+```
+
+### Question 2 - Testing RMSE function
+
+Create some response values and predictions:
+
+```{r}
+set.seed(10)
+n <- 100
+x <- runif(n)
+resp <- 3 + 10*x + rnorm(n)
+pred <- predict(lm(resp ~ x), data.frame(x))
+```
+
+Test the `getRMSE` function:
+
+```{r}
+getRMSE(response = resp, prediction = pred)
+```
+
+Replace two response values with missing values:
+
+```{r}
+resp_new <- replace(resp, c(3, 27), NA)
+```
+
+Test `getRMSE` function without specifying behavior to deal with `NA` values:
+
+```{r}
+getRMSE(resp_new, pred)
+```
+Test `getRMSE` function specifying behavior to deal with `NA` values:
+
+```{r}
+getRMSE(resp_new, pred, na.rm=TRUE)
+```
+### Question 3 - Write function to calculate MAE
+
+```{r}
+getMAE <- function(response, prediction, ...){
+  mean(abs(response - prediction), ...)
+}
+```
+
+### Question 4 - Testing MAE function
+
+Create some response values and predictions:
+
+```{r}
+set.seed(10)
+n <- 100
+x <- runif(n)
+resp <- 3 + 10*x + rnorm(n)
+pred <- predict(lm(resp ~ x), data.frame(x))
+```
+
+Test the `getMAE` function:
+
+```{r}
+getMAE(response = resp, prediction = pred)
+```
+Replace two response values with missing values:
+
+```{r}
+resp_new <- replace(resp, c(37, 77), NA)
+```
+
+Test `getMAE` function without specifying behavior to deal with `NA` values:
+
+```{r}
+getMAE(resp_new, pred)
+```
+
+Test `getMAE` function specifying behavior to deal with `NA` values:
+
+```{r}
+getMAE(resp_new, pred, na.rm=TRUE)
+```
+### Question 5 - Create wrapper function
+
+```{r}
+wrap_func <- function(response, prediction, metric = c("RMSE", "MAE"), ...) {
+  if (!is.vector(response) | !is.vector(prediction)) {
+    return("At least one input in not a vector.")
+  } else if (!is.atomic(response) | !is.atomic(prediction)) {
+    return("At least one vector is not atomic.")
+  } else if (!is.numeric(response) | !is.numeric(prediction)) {
+    return("At least one vector is not numeric.")
+  } 
+  result <- list()
+  if ("RMSE" %in% metric) {
+    result$RMSE <- getRMSE(response, prediction, ...)
+  }
+  if ("MAE" %in% metric) {
+    result$MAE <- getMAE(response, prediction, ...)
+  }
+  return(result)
+}
+```
+
+### Question 6 - Testing wrapper function
+
+Create some response values and predictions:
+
+```{r}
+set.seed(10)
+n <- 100
+x <- runif(n)
+resp <- 3 + 10*x + rnorm(n)
+pred <- predict(lm(resp ~ x), data.frame(x))
+```
+
+Test new function:
+
+```{r}
+wrap_func(resp, pred, metric = "MAE")
+```
+```{r}
+wrap_func(resp, pred, metric = "RMSE")
+```
+```{r}
+wrap_func(resp, pred)
+```
+Replace two reponse values with `NA` values and repeat:
+
+```{r}
+resp_new <- replace(resp, c(42, 68), NA)
+```
+
+```{r}
+wrap_func(resp_new, pred, metric = "RMSE")
+```
+```{r}
+wrap_func(resp_new, pred, metric = "RMSE", na.rm=TRUE)
+```
+```{r}
+wrap_func(resp_new, pred, metric = "MAE")
+```
+```{r}
+wrap_func(resp_new, pred, metric = "MAE", na.rm=TRUE)
+```
+```{r}
+wrap_func(resp_new, pred)
+```
+```{r}
+wrap_func(resp_new, pred, na.rm=TRUE)
+```
+
+Test wrapper function by passing incorrect data:
+
+```{r}
+set.seed(10)
+res <- as.data.frame(matrix(runif(n=10, min=1, max=20), nrow=5))
+wrap_func(res, pred)
+```
+
+## Task 3: Querying an API and a Tidy Style Function
