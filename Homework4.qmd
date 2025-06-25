@@ -68,11 +68,13 @@ Test `getRMSE` function without specifying behavior to deal with `NA` values:
 ```{r}
 getRMSE(resp_new, pred)
 ```
+
 Test `getRMSE` function specifying behavior to deal with `NA` values:
 
 ```{r}
 getRMSE(resp_new, pred, na.rm=TRUE)
 ```
+
 ### Question 3 - Write function to calculate MAE
 
 ```{r}
@@ -98,6 +100,7 @@ Test the `getMAE` function:
 ```{r}
 getMAE(response = resp, prediction = pred)
 ```
+
 Replace two response values with missing values:
 
 ```{r}
@@ -115,6 +118,7 @@ Test `getMAE` function specifying behavior to deal with `NA` values:
 ```{r}
 getMAE(resp_new, pred, na.rm=TRUE)
 ```
+
 ### Question 5 - Create wrapper function
 
 ```{r}
@@ -154,12 +158,15 @@ Test new function:
 ```{r}
 wrap_func(resp, pred, metric = "MAE")
 ```
+
 ```{r}
 wrap_func(resp, pred, metric = "RMSE")
 ```
+
 ```{r}
 wrap_func(resp, pred)
 ```
+
 Replace two reponse values with `NA` values and repeat:
 
 ```{r}
@@ -169,18 +176,23 @@ resp_new <- replace(resp, c(42, 68), NA)
 ```{r}
 wrap_func(resp_new, pred, metric = "RMSE")
 ```
+
 ```{r}
 wrap_func(resp_new, pred, metric = "RMSE", na.rm=TRUE)
 ```
+
 ```{r}
 wrap_func(resp_new, pred, metric = "MAE")
 ```
+
 ```{r}
 wrap_func(resp_new, pred, metric = "MAE", na.rm=TRUE)
 ```
+
 ```{r}
 wrap_func(resp_new, pred)
 ```
+
 ```{r}
 wrap_func(resp_new, pred, na.rm=TRUE)
 ```
@@ -194,3 +206,38 @@ wrap_func(res, pred)
 ```
 
 ## Task 3: Querying an API and a Tidy Style Function
+
+### Question 1 - Use `httr::GET`
+
+```{r, tidy.opts=list(width.cutoff=60)}
+library(httr)
+library(jsonlite)
+library(tidyverse)
+result <- httr::GET("https://newsapi.org/v2/everything?q=apple&from=2025-06-24&to=2025-06-24&sortBy=popularity&apiKey=c7b50b99e7cc4de08bf84f6cc40de658")
+parsed <- fromJSON(rawToChar(result$content))
+dat <- as_tibble(parsed$articles)
+dat
+```
+
+### Question 2 - Parse information
+
+```{r}
+parsed$articles$content[1]
+```
+### Question 3 - Function to query API
+
+```{r}
+query_API <- function(subject, time, API_key) {
+  base_url <- "https://newsapi.org/v2/everything?q=apple&"
+  fullurl <- paste0(base_url, "q=", "from=", time, 
+                    "&to=2025-06-24&sortBy=popularity&apiKey=", API_key)
+  geturl <- httr::GET(fullurl)
+  cont <- fromJSON(rawToChar(geturl$content))
+  cont |> filter(str_detect(title, subject))
+}
+```
+
+```{r, eval=FALSE}
+query_API("gamestop", "2025-06-01", "c7b50b99e7cc4de08bf84f6cc40de658")
+```
+
